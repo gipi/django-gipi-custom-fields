@@ -52,6 +52,14 @@ class PagamentoWidget(forms.widgets.MultiWidget):
 		super(PagamentoWidget, self).__init__(widgets)
 
 	def decompress(self, value):
+		"""
+		Takes the text from the database and fills the various selects
+		with the right values.
+
+		The value in the database is something like
+
+			Ri. ba.|30+10/60+10
+		"""
 		values = [None]*5
 		if not value:
 			return values
@@ -82,8 +90,7 @@ class PagamentoWidget(forms.widgets.MultiWidget):
 
 class PagamentoField(forms.fields.MultiValueField):
 	"""
-	This field describes the terms of payment of a client
-	when a OrdineAcquisto is created.
+	This field describes the terms of payment of a client.
 	"""
 	widget = PagamentoWidget
 
@@ -101,6 +108,9 @@ class PagamentoField(forms.fields.MultiValueField):
 	
 	def compress(self, data_list):
 		"""
+		From the various values inserted is possible to obtain the
+		following entries
+
 		 30 gg d.f.f.m.
 		 30 +10 gg d.f.f.m.
 		 60 gg d.f.f.m.
