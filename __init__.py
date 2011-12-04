@@ -2,6 +2,7 @@
 from django import forms
 from django.core import validators
 from django.core.exceptions import ValidationError
+from django.db import models
 
 
 class PagamentoWidget(forms.widgets.MultiWidget):
@@ -88,7 +89,8 @@ class PagamentoWidget(forms.widgets.MultiWidget):
 		return rendered_widgets[0] + ' ' + rendered_widgets[1] + ' + ' + rendered_widgets[2] + ' / ' + rendered_widgets[3] + ' + ' + rendered_widgets[4]
 
 
-class PagamentoField(forms.fields.MultiValueField):
+# TODO: write a real model custom field https://docs.djangoproject.com/en/1.3/howto/custom-model-fields/
+class PagamentoFormField(forms.fields.MultiValueField):
 	"""
 	This field describes the terms of payment of a client.
 	"""
@@ -104,7 +106,7 @@ class PagamentoField(forms.fields.MultiValueField):
 			forms.fields.CharField(),
 			forms.fields.CharField(),
 			forms.fields.CharField())
-		super(PagamentoField, self).__init__(_fields, *args, **kwargs)
+		super(PagamentoFormField, self).__init__(_fields, *args, **kwargs)
 	
 	def compress(self, data_list):
 		"""
@@ -153,3 +155,73 @@ class PagamentoField(forms.fields.MultiValueField):
 
 
 		return final
+
+# NOTE: using models.Field doesn't create database column
+class PagamentoModelField(models.CharField):
+
+	def __init__(self, *args, **kwargs):
+		kwargs['max_length'] = 100
+		super(PagamentoModelField, self).__init__(*args, **kwargs)
+
+#	def formfield(self, **kwargs):
+#		defaults = {'form_class': PagamentoFormField}
+#		defaults.update(kwargs)
+
+#		return super(PagamentoModelField, self).formfield(**defaults)
+
+# without this South can't migrate the field
+# http://south.aeracode.org/docs/tutorial/part4.html#tutorial-part-4
+from south.modelsinspector import add_introspection_rules
+add_introspection_rules([], ["^widgets\.PagamentoModelField"])
+
+
+###########
+class DatiBancariWidget(forms.widgets.MultiWidget):
+	def __init__(self, attrs=None):
+		print "DatiBancariWidget.__init__"
+		_widgets = (
+			forms.widgets.TextInput(),
+			forms.widgets.TextInput(),
+		)
+		super(DatiBancariWidget, self).__init__(_widgets, attrs)
+
+	def decompress(self, value):
+		"""
+		This must be split the value from DB (using the space as
+		separator) and full the textfield with the two values obtained.
+		"""
+		if value is None:
+			return ["", ""]
+
+		return value.split("$")
+
+	def format_output(self, rendered_widgets):
+		return 'IBAN ' + rendered_widgets[0] + ' Istituto ' + rendered_widgets[1] 
+
+class DatiBancariFormField(forms.fields.MultiValueField):
+	widget = DatiBancariWidget
+	def __init__(self, *args, **kwargs):
+		_fields = (
+			forms.fields.CharField(),
+			forms.fields.CharField(),
+		)
+		super(DatiBancariFormField, self).__init__(_fields, *args, **kwargs);
+
+	def compress(self, data_list):
+		"""
+		Build up the value to save into the DB joining the two mandatory values
+		passed from the user with the char "$" (I hope is not used into the
+		input).
+		"""
+		if data_list[0] in validators.EMPTY_VALUES or data_list[1] in validators.EMPTY_VALUES:
+			raise ValidationError('Inserire tutti e due i valori')
+
+		return data_list[0] + "$" + data_list[1]
+
+class DatiBancariModelField(models.CharField):
+	def __init__(self, *args, **kwargs):
+		kwargs['max_length'] = 100
+		super(DatiBancariModelField, self).__init__(*args, **kwargs)
+
+from south.modelsinspector import add_introspection_rules
+add_introspection_rules([], ["^widgets\.DatiBancariModelField"])
