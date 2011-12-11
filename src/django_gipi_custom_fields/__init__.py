@@ -160,7 +160,8 @@ class PagamentoFormField(forms.fields.MultiValueField):
 class PagamentoModelField(models.CharField):
 
 	def __init__(self, *args, **kwargs):
-		kwargs['max_length'] = 100
+                # chose a better value for max_length
+		kwargs['max_length'] = kwargs.get('max_length', 50)
 		super(PagamentoModelField, self).__init__(*args, **kwargs)
 
 #	def formfield(self, **kwargs):
