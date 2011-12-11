@@ -1,0 +1,10 @@
+Simple django module with two kind of custom fields.
+
+These are not supposed to be used in production, are personal
+experiments about customize Django's stuffs and buildout mess.
+
+In order to test all this mess you can use the following commands:
+
+ $ python bootstrap.py
+ $ ./bin/buildout
+ $ ./bin/test
