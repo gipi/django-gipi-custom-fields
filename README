@@ -8,3 +8,22 @@ In order to test all this mess you can use the following commands:
  $ python bootstrap.py
  $ ./bin/buildout
  $ ./bin/test
+
+TROUBLESHOOTING
+---------------
+
+If this error pops out
+
+	Getting distribution for 'psycopg2'.
+	Error: pg_config executable not found.
+
+	Please add the directory containing pg_config to the PATH
+	or specify the full executable path with the option:
+
+	    python setup.py build_ext --pg-config /path/to/pg_config build ...
+
+	    or with the pg_config option in 'setup.cfg'.
+
+Simply do
+
+ # apt-get install libpq-dev python-dev
