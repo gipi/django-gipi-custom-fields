@@ -219,10 +219,23 @@ class DatiBancariFormField(forms.fields.MultiValueField):
 
 		return data_list[0] + "$" + data_list[1]
 
-class DatiBancariModelField(models.CharField):
+class DatiBancariModelField(models.Field):
+        __metaclass__ = models.SubfieldBase
 	def __init__(self, *args, **kwargs):
 		kwargs['max_length'] = 100
 		super(DatiBancariModelField, self).__init__(*args, **kwargs)
+
+        def to_python(self, value):
+                if isinstance(value, DatiBancari):
+                        return value
+                if value == "":
+                        values = ["", ""]
+                else:
+                        values = value.split('$')
+                return DatiBancari(*values)
+
+        def get_prep_value(self, value):
+                return '$'.join([value.name, value.iban])
 
 class DatiBancari(object):
         """
