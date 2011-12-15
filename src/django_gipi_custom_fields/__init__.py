@@ -224,5 +224,18 @@ class DatiBancariModelField(models.CharField):
 		kwargs['max_length'] = 100
 		super(DatiBancariModelField, self).__init__(*args, **kwargs)
 
+class DatiBancari(object):
+        """
+        Bank related data like bank's name and IBAN.
+
+        >>> db = DatiBancari('Banca Sella', '666')
+        >>> db
+        <django_gipi_custom_fields.DatiBancari object at ...>
+
+        """
+        def __init__(self, name, iban):
+                self.name = name
+                self.iban = iban
+
 from south.modelsinspector import add_introspection_rules
 add_introspection_rules([], ["^widgets\.DatiBancariModelField"])
