@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
+from .forms import OrariFormField
+from .models import Orari
 from django import forms
 from django.core import validators
 from django.core.exceptions import ValidationError
 from django.db import models
+import datetime
+import time
 
 
 class PagamentoWidget(forms.widgets.MultiWidget):
@@ -252,3 +256,83 @@ class DatiBancari(object):
 
 from south.modelsinspector import add_introspection_rules
 add_introspection_rules([], ["^widgets\.DatiBancariModelField"])
+
+
+
+class OrariModelField(models.Field):
+	"""
+	This field is intended to save information about opening hours and
+	stuffs like that.
+
+	Internally it saves the information into a Char with each hours comma
+	separated and each day (with 4 hours) separated by the pipe character.
+
+	When a day has not hours it is represented as an empty string.
+	"""
+	__metaclass__ = models.SubfieldBase
+	description = "Describes oraries"
+	def __init__(self, *args, **kwargs):
+		kwargs["max_length"] = 50
+		super(OrariModelField, self).__init__(*args, **kwargs)
+
+	def db_type(self):
+		return "varchar(30)"
+
+	def _datetime_from_string(self, value):
+		try:
+			a = time.strptime(value, "%H:%M:%S")
+		except:
+			return None
+
+		return datetime.time(a.tm_hour, a.tm_min)
+
+	def to_python(self, value):
+		"""
+		Transforms the value from the DB or when assigned to the field.
+		"""
+		if value is None:
+			return value
+
+		if isinstance(value, basestring):
+			if value == "":
+				return None
+
+			days = value.split("|")
+			orari = []
+
+			for day in days:
+				orariostr = day.split(",")
+				if len(orariostr) != 4:
+					orari.append(None)
+				else:
+					orari.append(map(self._datetime_from_string, orariostr))
+			return Orari(
+				monday=orari[0],
+				tuesday=orari[1],
+				wednesday=orari[2],
+				thursday=orari[3],
+				friday=orari[4],
+				saturday=orari[5],
+				sunday=orari[6]
+			)
+		elif not isinstance(value, Orari):
+			raise ValidationError("I need an Orario!!!")
+
+		return value
+
+	def get_prep_value(self, value):
+		days = []
+		# below we obtain ["08:00,12:00,14:00,18:00", "...", ...]
+		for k in ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]:
+			orari_for_day = value.orari[k]
+			if orari_for_day is not None:
+				days.append(",".join([o.isoformat() for o in orari_for_day]))
+			else:
+				days.append("")
+
+		return "|".join(days)
+
+	def formfield(self, form_class=OrariFormField, **kwargs):
+		defaults = {"help_text": "Seleziona i giorni utili ed inserisci i rispettivi orari"}
+		defaults.update(kwargs)
+		return form_class(**defaults)
