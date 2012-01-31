@@ -176,8 +176,11 @@ class PagamentoModelField(models.CharField):
 
 # without this South can't migrate the field
 # http://south.aeracode.org/docs/tutorial/part4.html#tutorial-part-4
-from south.modelsinspector import add_introspection_rules
-add_introspection_rules([], ["^widgets\.PagamentoModelField"])
+try:
+    from south.modelsinspector import add_introspection_rules
+    add_introspection_rules([], ["^django_gipi_custom_fields\.PagamentoModelField"])
+except ImportError:
+    pass
 
 
 ###########
@@ -254,8 +257,11 @@ class DatiBancari(object):
                 self.name = name
                 self.iban = iban
 
-from south.modelsinspector import add_introspection_rules
-add_introspection_rules([], ["^widgets\.DatiBancariModelField"])
+try:
+    from south.modelsinspector import add_introspection_rules
+    add_introspection_rules([], ["^django_gipi_custom_fields\.DatiBancariModelField"])
+except ImportError:
+    pass
 
 
 
@@ -336,3 +342,9 @@ class OrariModelField(models.Field):
 		defaults = {"help_text": "Seleziona i giorni utili ed inserisci i rispettivi orari"}
 		defaults.update(kwargs)
 		return form_class(**defaults)
+
+try:
+    from south.modelsinspector import add_introspection_rules
+    add_introspection_rules([], ["^django_gipi_custom_fields\.OrariModelField"])
+except ImportError:
+    pass
