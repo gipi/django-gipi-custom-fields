@@ -228,9 +228,12 @@ class DatiBancariFormField(forms.fields.MultiValueField):
 
 class DatiBancariModelField(models.Field):
         __metaclass__ = models.SubfieldBase
-	def __init__(self, *args, **kwargs):
-		kwargs['max_length'] = 100
-		super(DatiBancariModelField, self).__init__(*args, **kwargs)
+        def __init__(self, *args, **kwargs):
+            kwargs['max_length'] = 100
+            super(DatiBancariModelField, self).__init__(*args, **kwargs)
+
+        def db_type(self):
+            return "varchar(100)"
 
         def to_python(self, value):
                 if isinstance(value, DatiBancari):
