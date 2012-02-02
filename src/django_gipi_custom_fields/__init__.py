@@ -186,7 +186,6 @@ except ImportError:
 ###########
 class DatiBancariWidget(forms.widgets.MultiWidget):
 	def __init__(self, attrs=None):
-		print "DatiBancariWidget.__init__"
 		_widgets = (
 			forms.widgets.TextInput(),
 			forms.widgets.TextInput(),
