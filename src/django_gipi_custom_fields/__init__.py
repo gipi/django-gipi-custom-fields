@@ -266,6 +266,9 @@ class DatiBancari(object):
                 self.name = name
                 self.iban = iban
 
+        def __unicode__(self):
+            return "IBAN %s presso %s" % (self.iban, self.name)
+
 try:
     from south.modelsinspector import add_introspection_rules
     add_introspection_rules([], ["^django_gipi_custom_fields\.DatiBancariModelField"])
