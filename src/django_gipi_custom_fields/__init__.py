@@ -249,7 +249,7 @@ class DatiBancariModelField(models.Field):
                 return '$'.join([value.iban, value.name])
 
         def formfield(self, form_class=DatiBancariFormField, **kwargs):
-            defaults = {"help_text": "Inserisci gli estremi della banca per i pagamaenti"}
+            defaults = {"help_text": "Inserisci gli estremi della banca per i pagamenti"}
             defaults.update(kwargs)
             return form_class(**defaults)
 
