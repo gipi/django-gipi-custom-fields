@@ -200,7 +200,7 @@ class DatiBancariWidget(forms.widgets.MultiWidget):
 		if value is None:
 			return ["", ""]
 
-		return value.split("$")
+		return [value.iban, value.name]
 
 	def format_output(self, rendered_widgets):
 		return 'IBAN ' + rendered_widgets[0] + ' Istituto ' + rendered_widgets[1] 
