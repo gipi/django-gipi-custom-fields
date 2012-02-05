@@ -235,13 +235,15 @@ class DatiBancariModelField(models.Field):
             return "varchar(100)"
 
         def to_python(self, value):
-                if isinstance(value, DatiBancari):
-                        return value
+            if isinstance(value, DatiBancari):
+                    return value
+
+            if isinstance(value, basestring):
                 if value == "":
                         values = ["", ""]
                 else:
                         values = value.split('$')
-                return DatiBancari(*values)
+            return DatiBancari(*values)
 
         def get_prep_value(self, value):
                 return '$'.join([value.name, value.iban])
