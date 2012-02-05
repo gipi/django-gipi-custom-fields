@@ -246,7 +246,7 @@ class DatiBancariModelField(models.Field):
             return DatiBancari(*values)
 
         def get_prep_value(self, value):
-                return '$'.join([value.name, value.iban])
+                return '$'.join([value.iban, value.name])
 
         def formfield(self, form_class=DatiBancariFormField, **kwargs):
             defaults = {"help_text": "Inserisci gli estremi della banca per i pagamaenti"}
