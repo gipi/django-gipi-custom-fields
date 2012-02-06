@@ -248,6 +248,10 @@ class DatiBancariModelField(models.Field):
         def get_prep_value(self, value):
                 return '$'.join([value.iban, value.name])
 
+        def value_to_string(self, instance):
+            dati = getattr(instance, self.name)
+            return self.get_prep_value(dati)
+
         def formfield(self, form_class=DatiBancariFormField, **kwargs):
             defaults = {"help_text": "Inserisci gli estremi della banca per i pagamenti"}
             defaults.update(kwargs)
@@ -349,6 +353,10 @@ class OrariModelField(models.Field):
 				days.append("")
 
 		return "|".join(days)
+
+	def value_to_string(self, instance):
+		dati = getattr(instance, self.name)
+		return self.get_prep_value(dati)
 
 	def formfield(self, form_class=OrariFormField, **kwargs):
 		defaults = {"help_text": "Seleziona i giorni utili ed inserisci i rispettivi orari"}
