@@ -9,14 +9,8 @@ class Customer(models.Model):
         Name = models.CharField(max_length=50)
         DatiBancari = DatiBancariModelField()
 
-class CustomerForm(forms.ModelForm):
-        class Meta:
-                model = Customer
-
-        DatiBancari = DatiBancariFormField()
-
 class CustomerAdmin(admin.ModelAdmin):
-        form = CustomerForm
+    list_display = ('Name', 'DatiBancari')
 
 class Shop(models.Model):
         name = models.CharField(max_length=50)
