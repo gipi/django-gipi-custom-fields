@@ -246,7 +246,7 @@ class DatiBancariModelField(models.Field):
             return DatiBancari(*values)
 
         def get_prep_value(self, value):
-                return '$'.join([value.iban, value.name])
+            return '$'.join([value.iban, value.name])
 
         def value_to_string(self, instance):
             dati = getattr(instance, self.name)
