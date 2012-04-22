@@ -231,7 +231,7 @@ class DatiBancariModelField(models.Field):
             kwargs['max_length'] = 100
             super(DatiBancariModelField, self).__init__(*args, **kwargs)
 
-        def db_type(self):
+        def db_type(self, connection):
             return "varchar(100)"
 
         def to_python(self, value):
@@ -297,7 +297,7 @@ class OrariModelField(models.Field):
 		kwargs["max_length"] = 50
 		super(OrariModelField, self).__init__(*args, **kwargs)
 
-	def db_type(self):
+	def db_type(self, connection):
 		return "varchar(30)"
 
 	def _datetime_from_string(self, value):
