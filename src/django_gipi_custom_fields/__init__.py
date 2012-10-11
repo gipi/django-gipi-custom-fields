@@ -349,7 +349,7 @@ class OrariModelField(models.Field):
 		for k in ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]:
 			orari_for_day = value.orari[k]
 			if orari_for_day is not None:
-				days.append(",".join([o.isoformat() for o in orari_for_day]))
+				days.append(",".join([o.isoformat() if o else "" for o in orari_for_day]))
 			else:
 				days.append("")
 
