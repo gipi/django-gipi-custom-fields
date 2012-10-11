@@ -77,12 +77,22 @@ class OrariFormWidget(forms.widgets.MultiWidget):
         Divides the 35 form field in 7 rows and creates a table from it.
         """
         rows = []
+        days_list = [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        ]
+        header = '<thead><th colspan="2"></th><th style="text-align:center" colspan="2">mattina</th><th style="text-align:center" colspan="2">pomeriggio</th></thead>'
         for count in xrange(7):
-            rows.append("".join(map(lambda x: "<td>%s</td>" % x, [x for x in islice(rendered_widgets, count*5, count*5 + 5, 1)])))
+            rows.append(("<td>%s:</td>" % days_list[count]) + "".join(map(lambda x: "<td>%s</td>" % x, [x for x in islice(rendered_widgets, count*5, count*5 + 5, 1)])))
 
         rows = map(lambda x: "<tr>%s</tr>" % x, rows)
 
-        return "<table>" + ("".join(rows)) + "</table>"
+        return "<table>" + header + ("".join(rows)) + "</table>"
 
 class OrariFormField(forms.fields.MultiValueField):
     widget = OrariFormWidget
