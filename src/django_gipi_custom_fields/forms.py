@@ -140,26 +140,24 @@ class OrariFormField(forms.fields.MultiValueField):
         """
         Instead of call clean(), calls this
         """
+        days_list = [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        ]
         days = {}
-        if data_list[0]:
-            days["monday"] = data_list[1:5]
-
-        if data_list[5]:
-            days["tuesday"] = data_list[6:10]
-
-        if data_list[10]:
-            days["wednesday"] = data_list[11:15]
-
-        if data_list[15]:
-            days["thursday"] = data_list[16:20]
-
-        if data_list[20]:
-            days["friday"] = data_list[21:25]
-
-        if data_list[25]:
-            days["saturday"] = data_list[26:30]
-
-        if data_list[30]:
-            days["sunday"] = data_list[31:35]
+        for count in range(0, 35, 5):
+            if data_list[count]:
+                values = data_list[count + 1:count + 5]
+                """
+                # TODO: add variable to manage when all the time are needed for row
+                if None in values:
+                    raise forms.ValidationError("Devi inserire tutti gli orari per il dato giorno")
+                """
+                days[days_list[count/7]] = values
 
         return Orari(**days)
