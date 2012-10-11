@@ -281,6 +281,7 @@ except ImportError:
 
 
 
+ORARI_MODEL_FIELD_SIZE = 255
 class OrariModelField(models.Field):
 	"""
 	This field is intended to save information about opening hours and
@@ -294,11 +295,11 @@ class OrariModelField(models.Field):
 	__metaclass__ = models.SubfieldBase
 	description = "Describes oraries"
 	def __init__(self, *args, **kwargs):
-		kwargs["max_length"] = 50
+		kwargs["max_length"] = ORARI_MODEL_FIELD_SIZE
 		super(OrariModelField, self).__init__(*args, **kwargs)
 
 	def db_type(self, connection):
-		return "varchar(30)"
+		return "varchar(%d)" % ORARI_MODEL_FIELD_SIZE
 
 	def _datetime_from_string(self, value):
 		try:
