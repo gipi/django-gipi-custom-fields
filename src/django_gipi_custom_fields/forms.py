@@ -158,6 +158,6 @@ class OrariFormField(forms.fields.MultiValueField):
                 if None in values:
                     raise forms.ValidationError("Devi inserire tutti gli orari per il dato giorno")
                 """
-                days[days_list[count/7]] = values
+                days[days_list[count/5]] = values
 
         return Orari(**days)
