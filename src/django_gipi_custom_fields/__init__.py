@@ -57,37 +57,13 @@ class PagamentoWidget(forms.widgets.MultiWidget):
 		super(PagamentoWidget, self).__init__(widgets)
 
 	def decompress(self, value):
-		"""
-		Takes the text from the database and fills the various selects
-		with the right values.
-
-		The value in the database is something like
-
-			Ri. ba.|30+10/60+10
-		"""
-		values = [None]*5
-		if not value:
-			return values
-
-		lr = value.split("/")
-		if len(lr) > 1:
-			mb = lr[1].split('+')
-			values[3] = mb[0].strip()
-
-			if len(mb) > 1:
-				values[4] = mb[1].strip()
-
-		fs = lr[0].split('|')
-
-		values[0] = fs[0].strip()
-
-		mb = fs[1].split('+')
-		values[1] = mb[0].strip()
-
-		if len(mb) > 1:
-			values[2] = mb[1].strip()
-
-		return values
+		return [
+			value.tipo,
+			value.scadenza,
+			value.scadenza_extra,
+			value.seconda_scadenza,
+			value.seconda_scadenza_extra,
+		]
 
 	def format_output(self, rendered_widgets):
 		return rendered_widgets[0] + ' ' + rendered_widgets[1] + ' + ' + rendered_widgets[2] + ' / ' + rendered_widgets[3] + ' + ' + rendered_widgets[4]
@@ -146,27 +122,98 @@ class PagamentoFormField(forms.fields.MultiValueField):
 		if data_list[3] not in validators.EMPTY_VALUES and int(data_list[3]) <= int(data_list[1]):
 			raise ValidationError('la seconda scadenza non può essere precedente o uguale alla prima')
 
+		return Pagamento(*data_list)
 
+class Pagamento(object):
+    def __init__(self, tipo, scadenza, scadenza_extra, seconda_scadenza, seconda_scadenza_extra):
+        self.tipo                   = tipo
+        self.scadenza               = scadenza
+        self.scadenza_extra         = scadenza_extra
+        self.seconda_scadenza       = seconda_scadenza
+        self.seconda_scadenza_extra = seconda_scadenza_extra
 
-		final = data_list[0] + ' | ' + data_list[1]
-
-		if data_list[2]:
-			final += ' + ' + data_list[2]
-		if data_list[3]:
-			final += ' / ' + data_list[3]
-		if data_list[4]:
-			final += ' + ' + data_list[4]
-
-
-		return final
+    def __repr__(self):
+        return '%s %s%s%s%s%s' % (
+            self.tipo,
+            self.scadenza,
+            ('+%s' % self.scadenza_extra) if self.scadenza_extra else '',
+            ' / ' if self.seconda_scadenza else '',
+            self.seconda_scadenza if self.seconda_scadenza else '',
+            ('+%s' % self.seconda_scadenza_extra) if self.seconda_scadenza_extra else '',
+        )
 
 # NOTE: using models.Field doesn't create database column
-class PagamentoModelField(models.CharField):
+class PagamentoModelField(models.Field):
+	# If you use SubfieldBase, to_python() will be called every
+	# time an instance of the field is assigned a value. This means
+	# that whenever a value may be assigned to the field, you need
+	# to ensure that it will be of the correct datatype, or that you handle any exceptions.
+	#
+	# This is especially important if you use ModelForms. When saving a ModelForm,
+	# Django will use form values to instantiate model instances. However, if the
+	#cleaned form data can’t be used as valid input to the field, the normal form validation process will break.
+	__metaclass__ = models.SubfieldBase
 
 	def __init__(self, *args, **kwargs):
                 # chose a better value for max_length
-		kwargs['max_length'] = kwargs.get('max_length', 50)
+		#kwargs['max_length'] = kwargs.get('max_length', 50)
 		super(PagamentoModelField, self).__init__(*args, **kwargs)
+
+
+	def db_type(self, connection):
+		return "varchar(50)"
+
+	def to_python(self, value):
+		"""
+		Takes the text from the database and fills the Pagamento object
+		with the right values.
+
+		The value in the database is something like
+
+			Ri. ba.|30+10/60+10
+		"""
+		if isinstance(value, Pagamento):
+			return value
+
+		values = [None]*5
+		if not value:
+			return values
+
+		lr = value.split("/")
+		if len(lr) > 1:
+			mb = lr[1].split('+')
+			values[3] = mb[0].strip()
+
+			if len(mb) > 1:
+				values[4] = mb[1].strip()
+
+		fs = lr[0].split('|')
+
+		values[0] = fs[0].strip()
+
+		mb = fs[1].split('+')
+		values[1] = mb[0].strip()
+
+		if len(mb) > 1:
+			values[2] = mb[1].strip()
+
+		return Pagamento(*values)
+
+	def get_prep_value(self, value):
+		prima_scadenza = value.scadenza
+		if value.scadenza_extra:
+			prima_scadenza += '+%s' % value.scadenza_extra
+
+		seconda_scadenza = value.seconda_scadenza
+		if value.seconda_scadenza_extra:
+			seconda_scadenza += '+%s' % value.seconda_scadenza_extra
+
+		return '%s|%s/%s' % (value.tipo, prima_scadenza, seconda_scadenza)
+
+	def value_to_string(self, obj):
+		value = self._get_val_from_obj(obj)
+		return self.get_prep_value(value)
+
 
 #	def formfield(self, **kwargs):
 #		defaults = {'form_class': PagamentoFormField}
