@@ -57,6 +57,8 @@ class PagamentoWidget(forms.widgets.MultiWidget):
 		super(PagamentoWidget, self).__init__(widgets)
 
 	def decompress(self, value):
+		if not value:
+			return [None,]*5
 		return [
 			value.tipo,
 			value.scadenza,
