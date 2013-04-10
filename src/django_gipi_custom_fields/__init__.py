@@ -202,6 +202,16 @@ class PagamentoModelField(models.Field):
 		return Pagamento(*values)
 
 	def get_prep_value(self, value):
+		"""Transform the value passed to the field in order to be
+		inserted into the database.
+		"""
+		if not value:
+			# save None into the DB
+			return value
+
+		if isinstance(value, basestring):
+			return value
+
 		prima_scadenza = value.scadenza
 		if value.scadenza_extra:
 			prima_scadenza += '+%s' % value.scadenza_extra
