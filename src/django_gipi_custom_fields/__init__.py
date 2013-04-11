@@ -227,11 +227,11 @@ class PagamentoModelField(models.Field):
 		return self.get_prep_value(value)
 
 
-#	def formfield(self, **kwargs):
-#		defaults = {'form_class': PagamentoFormField}
-#		defaults.update(kwargs)
+	def formfield(self, **kwargs):
+		defaults = {'form_class': PagamentoFormField}
+		defaults.update(kwargs)
 
-#		return super(PagamentoModelField, self).formfield(**defaults)
+		return super(PagamentoModelField, self).formfield(**defaults)
 
 # without this South can't migrate the field
 # http://south.aeracode.org/docs/tutorial/part4.html#tutorial-part-4
