@@ -179,7 +179,7 @@ class PagamentoModelField(models.Field):
 
 		values = [None]*5
 		if not value:
-			return values
+			return value
 
 		lr = value.split("/")
 		if len(lr) > 1:
