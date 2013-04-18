@@ -52,23 +52,38 @@ class PagamentoWidget(forms.widgets.MultiWidget):
 					('', '----',),
 					('10','10',),
 					('20','20',),
+				),
+            ),
+			forms.widgets.Select(
+				choices=(
+					('', '----',),
+					('ddt','ddt',),
+					('fattura','fattura',),
+				)
+            ),
+			forms.widgets.Select(
+				choices=(
+					('', '----',),
+					('fine mese','fine mese',),
 				)
 			))
 		super(PagamentoWidget, self).__init__(widgets)
 
 	def decompress(self, value):
 		if not value:
-			return [None,]*5
+			return [None,]*7
 		return [
 			value.tipo,
 			value.scadenza,
 			value.scadenza_extra,
 			value.seconda_scadenza,
 			value.seconda_scadenza_extra,
+            value.tipo_decorrenza,
+            value.decorrenza,
 		]
 
 	def format_output(self, rendered_widgets):
-		return rendered_widgets[0] + ' ' + rendered_widgets[1] + ' + ' + rendered_widgets[2] + ' / ' + rendered_widgets[3] + ' + ' + rendered_widgets[4]
+		return rendered_widgets[0] + ' ' + rendered_widgets[1] + ' + ' + rendered_widgets[2] + ' / ' + rendered_widgets[3] + ' + ' + rendered_widgets[4] + rendered_widgets[5] + rendered_widgets[6]
 
 
 # TODO: write a real model custom field https://docs.djangoproject.com/en/1.3/howto/custom-model-fields/
@@ -83,6 +98,8 @@ class PagamentoFormField(forms.fields.MultiValueField):
 		# see http://code.djangoproject.com/ticket/15511
 		kwargs['required'] = False
 		_fields = (
+			forms.fields.CharField(),
+			forms.fields.CharField(),
 			forms.fields.CharField(),
 			forms.fields.CharField(),
 			forms.fields.CharField(),
@@ -113,13 +130,14 @@ class PagamentoFormField(forms.fields.MultiValueField):
 		if data_list[0] in validators.EMPTY_VALUES or data_list[1] in validators.EMPTY_VALUES:
 			raise ValidationError('Almeno il primo termine di pagamento va impostato')
 
-		if (data_list[1] == 'alla consegna' or data_list[1] == 'anticipato') \
-				and (
-					data_list[2] not in validators.EMPTY_VALUES
-					or data_list[3] not in validators.EMPTY_VALUES
-					or data_list[4] not in validators.EMPTY_VALUES 
-				):
-					raise ValidationError('Valori impostati inutili')
+		if (data_list[1] == 'alla consegna' or data_list[1] == 'anticipato'):
+			if data_list[2] not in validators.EMPTY_VALUES \
+					or data_list[3] not in validators.EMPTY_VALUES \
+					or data_list[4] not in validators.EMPTY_VALUES:
+				raise ValidationError('Valori impostati inutili')
+		else:
+			if data_list[-2] in validators.EMPTY_VALUES:
+				raise ValidationError('non hai inserito la decorrenza')
 
 		if data_list[3] not in validators.EMPTY_VALUES and int(data_list[3]) <= int(data_list[1]):
 			raise ValidationError('la seconda scadenza non può essere precedente o uguale alla prima')
@@ -127,17 +145,22 @@ class PagamentoFormField(forms.fields.MultiValueField):
 		return Pagamento(*data_list)
 
 class Pagamento(object):
-    def __init__(self, tipo, scadenza, scadenza_extra, seconda_scadenza, seconda_scadenza_extra):
+    @trace
+    def __init__(self, tipo, scadenza, scadenza_extra, seconda_scadenza, seconda_scadenza_extra, tipo_decorrenza, decorrenza):
         self.tipo                   = tipo
         self.scadenza               = scadenza
         self.scadenza_extra         = scadenza_extra
         self.seconda_scadenza       = seconda_scadenza
         self.seconda_scadenza_extra = seconda_scadenza_extra
+        self.tipo_decorrenza        = tipo_decorrenza
+        self.decorrenza             = decorrenza
 
     def __repr__(self):
-        return '%s %s%s%s%s%s' % (
+        return '%s %s %s %s %s %s%s%s' % (
             self.tipo,
             self.scadenza,
+            self.tipo_decorrenza,
+            self.decorrenza,
             ('+%s' % self.scadenza_extra) if self.scadenza_extra else '',
             ' / ' if self.seconda_scadenza else '',
             self.seconda_scadenza if self.seconda_scadenza else '',
@@ -172,32 +195,39 @@ class PagamentoModelField(models.Field):
 
 		The value in the database is something like
 
-			Ri. ba.|30+10/60+10
+			Ri. ba.|30+10/60+10|fattura|fine mese
 		"""
 		if isinstance(value, Pagamento):
 			return value
 
-		values = [None]*5
+		values = [None]*7
 		if not value:
 			return value
 
-		lr = value.split("/")
-		if len(lr) > 1:
-			mb = lr[1].split('+')
+		try:
+			first , scadenza, tipo_decorrenza, decorrenza = value.split('|')
+		except ValueError:
+			# this only for old version
+			(first , scadenza), tipo_decorrenza, decorrenza = value.split('|'), None, None
+
+		scadenze = scadenza.split("/")
+		if len(scadenze) > 1:
+			mb = scadenze[1].split('+')
 			values[3] = mb[0].strip()
 
 			if len(mb) > 1:
 				values[4] = mb[1].strip()
 
-		fs = lr[0].split('|')
+		values[0] = first.strip()
 
-		values[0] = fs[0].strip()
-
-		mb = fs[1].split('+')
+		mb = scadenze[1].split('+')
 		values[1] = mb[0].strip()
 
 		if len(mb) > 1:
 			values[2] = mb[1].strip()
+
+		values[-2] = tipo_decorrenza
+		values[-1] = decorrenza
 
 		return Pagamento(*values)
 
@@ -220,7 +250,13 @@ class PagamentoModelField(models.Field):
 		if value.seconda_scadenza_extra:
 			seconda_scadenza += '+%s' % value.seconda_scadenza_extra
 
-		return '%s|%s/%s' % (value.tipo, prima_scadenza, seconda_scadenza)
+		return '%s|%s/%s|%s|%s' % (
+            value.tipo,
+            prima_scadenza,
+            seconda_scadenza,
+            value.tipo_decorrenza,
+            value.decorrenza,
+        )
 
 	def value_to_string(self, obj):
 		value = self._get_val_from_obj(obj)
