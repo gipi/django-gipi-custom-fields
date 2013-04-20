@@ -145,7 +145,6 @@ class PagamentoFormField(forms.fields.MultiValueField):
 		return Pagamento(*data_list)
 
 class Pagamento(object):
-    @trace
     def __init__(self, tipo, scadenza, scadenza_extra, seconda_scadenza, seconda_scadenza_extra, tipo_decorrenza, decorrenza):
         self.tipo                   = tipo
         self.scadenza               = scadenza
