@@ -83,7 +83,7 @@ class PagamentoWidget(forms.widgets.MultiWidget):
 		]
 
 	def format_output(self, rendered_widgets):
-		return rendered_widgets[0] + ' ' + rendered_widgets[1] + ' + ' + rendered_widgets[2] + ' / ' + rendered_widgets[3] + ' + ' + rendered_widgets[4] + rendered_widgets[5] + rendered_widgets[6]
+		return rendered_widgets[0] + ' ' + rendered_widgets[1] + ' + ' + rendered_widgets[2] + ' / ' + rendered_widgets[3] + ' + ' + rendered_widgets[4] + ' decorrenza ' + rendered_widgets[5] + rendered_widgets[6]
 
 
 # TODO: write a real model custom field https://docs.djangoproject.com/en/1.3/howto/custom-model-fields/
@@ -158,7 +158,7 @@ class Pagamento(object):
     def __repr__(self):
         return '%s %s %s %s %s %s%s%s' % (
             self.tipo,
-            self.scadenza,
+            self.scadenza if self.scadenza else '',
             self.tipo_decorrenza,
             self.decorrenza,
             ('+%s' % self.scadenza_extra) if self.scadenza_extra else '',
@@ -252,8 +252,8 @@ class PagamentoModelField(models.Field):
 
 		return '%s|%s/%s|%s|%s' % (
             value.tipo,
-            prima_scadenza,
-            seconda_scadenza,
+            prima_scadenza if prima_scadenza else '',
+            seconda_scadenza if seconda_scadenza else '',
             value.tipo_decorrenza,
             value.decorrenza,
         )
